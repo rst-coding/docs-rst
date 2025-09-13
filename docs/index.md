@@ -6,16 +6,16 @@ titleTemplate: docs
 description: rst-VitePr
 
 hero:
-  name: rst-Vitepress-Template
-  text: rst-VitePress的项目模版
-  tagline: 可以通过脚本自动构建sidebar配置。
+  name: rst-blog
+  text: rst-个人博客
+  # tagline: 可以通过脚本自动构建sidebar配置。
   actions:
     - theme: brand
       text: 开始
       link: /guide/introduce/introduce/introduce
     - theme: alt
       text: 在 Gitee 上查看
-      link: https://gitee.com/dotnetmoyu/Vitepress-Template
+      link: https://gitee.com/rensongtaogitee
   image:
     src: /home.png
 features:
