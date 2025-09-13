@@ -1,8 +1,9 @@
 ---
 layout: home
 
-title: rst-Vitepress-Template
-titleTemplate: MoYu框架文档
+title: rst-blog
+titleTemplate: docs
+description: rst-VitePr
 
 hero:
   name: rst-Vitepress-Template

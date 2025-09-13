@@ -1,14 +1,14 @@
 {
-	"name": "moyu-docs",
+	"name": "docs-rst",
 	"version": "1.0.0",
-	"description": "MoYu框架文档",
+	"description": "rst个人博客",
 	"author": {
-		"name": "少林寺驻北固山办事处大神父王喇嘛",
-		"email": "531035580@52moyu.net",
-		"url": "https://gitee.com/huguodong520"
+		"name": "rst",
+		"email": "rst@aaa.net",
+		"url": "https://gitee.com/rensongtaogitee"
 	},
 	"license": "MIT",
-	"homepage": "https://gitee.com/dotnetmoyu/Vitepress-Template",
+	"homepage": "https://gitee.com/rensongtaogitee",
 	"scripts": {
 		"docs:dev": "vitepress dev docs --host",
 		"docs:build": "vitepress build docs",
