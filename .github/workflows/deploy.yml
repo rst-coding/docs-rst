@@ -1,61 +1,63 @@
-name: Deploy VitePress site to Pages
+name: Deploy VitePress site to Pages   # 工作流名称（在 GitHub Actions 界面里显示）
 
-on:
-  push:
-    branches: [master]
+on:                                   # 定义触发条件
+  push:                               # 当 push 事件发生时触发
+    branches: [master]                # 仅在 push 到 master 分支时触发
 
-# 设置tokenn访问权限
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+permissions:                          # 设置工作流运行时需要的权限
+  contents: read                      # 允许读取仓库内容
+  pages: write                        # 允许写入 GitHub Pages（发布站点）
+  id-token: write                     # 允许生成 OIDC token（给 pages 部署用）
 
-# 只允许同时进行一次部署，跳过正在运行和最新队列之间的运行队列
-# 但是，不要取消正在进行的运行，因为我们希望允许这些生产部署完成
-concurrency:
-  group: pages
-  cancel-in-progress: false
+concurrency:                          # 并发控制，避免重复部署
+  group: pages                        # 将本工作流分到 “pages” 分组
+  cancel-in-progress: false           # 如果已有任务在跑，不会取消，保证部署能完成
 
-jobs:
-  # 构建工作
-  build:
-    runs-on: ubuntu-latest
-    steps:
+jobs:                                 # 定义具体的 job（工作任务）
+
+  build:                              # 第一个 job：构建 VitePress 静态站点
+    runs-on: ubuntu-latest            # 运行环境：最新的 Ubuntu
+    steps:                            # 具体步骤
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4     # 检出仓库代码
         with:
-          fetch-depth: 0 # 如果未启用 lastUpdated，则不需要
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2 # 安装pnpm并添加到环境变量
-        with:
-          version: 8.6.12 # 指定需要的 pnpm 版本
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: pnpm # 设置缓存
-      - name: Setup Pages
-        uses: actions/configure-pages@v3  # 在工作流程自动配置GithubPages
-      - name: Install dependencies
-        run: pnpm install # 安装依赖
-      - name: Build with VitePress
-        run: |
-          pnpm run docs:build # 启动项目
-          touch .nojekyll  # 通知githubpages不要使用Jekyll处理这个站点，不知道为啥不生效，就手动搞了
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3  # 上传构建产物
-        with:
-          path: .vitepress/dist # 指定上传的路径，当前是根目录，如果是docs需要加docs/的前缀
+          fetch-depth: 0              # 拉取完整历史（lastUpdated 插件才需要，否则可以省）
 
-  # 部署工作
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }} # 从后续的输出中获取部署后的页面URL
-    needs: build    # 在build后面完成
-    runs-on: ubuntu-latest  # 运行在最新版本的ubuntu系统上
-    name: Deploy
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4    # 安装 pnpm，并添加到环境变量
+        with:
+          version: 8.6.12             # 指定 pnpm 版本（避免版本不一致导致问题）
+
+      - name: Setup Node
+        uses: actions/setup-node@v4   # 安装 Node.js 环境
+        with:
+          node-version: 18            # 使用 Node.js 18 版本
+          cache: pnpm                 # 开启 pnpm 缓存，加快依赖安装
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5  # 配置 GitHub Pages 的环境变量（必须步骤）
+
+      - name: Install dependencies
+        run: pnpm install             # 安装项目依赖（根据 package.json）
+
+      - name: Build with VitePress
+        run: |                        # 运行多行命令
+          pnpm run docs:build         # 执行 VitePress 构建，生成静态文件
+          touch .vitepress/dist/.nojekyll  # 禁用 GitHub Pages 默认的 Jekyll 处理
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3   # 上传构建好的静态文件
+        with:
+          path: .vitepress/dist       # 指定上传目录（VitePress 默认输出路径）
+
+  deploy:                             # 第二个 job：部署到 GitHub Pages
+    environment:                      # 指定部署环境（Actions 会在环境里显示部署结果）
+      name: github-pages              # 环境名称：github-pages
+      url: ${{ steps.deployment.outputs.page_url }} # 部署完成后输出的站点 URL
+    needs: build                      # 依赖 build job（必须先构建再部署）
+    runs-on: ubuntu-latest            # 同样运行在 Ubuntu
+    name: Deploy                      # Job 名称
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment  # 指定id
-        uses: actions/deploy-pages@v4 # 将之前的构建产物部署到github pages中
+        id: deployment                # 给步骤设置一个 id，方便引用 outputs
+        uses: actions/deploy-pages@v4 # 将构建产物发布到 GitHub Pages
