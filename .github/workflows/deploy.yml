@@ -1,63 +1,70 @@
-name: Deploy VitePress site to Pages   # 工作流名称（在 GitHub Actions 界面里显示）
+name: Deploy VitePress site to Pages
 
-on:                                   # 定义触发条件
-  push:                               # 当 push 事件发生时触发
-    branches: [master]                # 仅在 push 到 master 分支时触发
+on:
+  push:
+    branches: [master]
 
-permissions:                          # 设置工作流运行时需要的权限
-  contents: read                      # 允许读取仓库内容
-  pages: write                        # 允许写入 GitHub Pages（发布站点）
-  id-token: write                     # 允许生成 OIDC token（给 pages 部署用）
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-concurrency:                          # 并发控制，避免重复部署
-  group: pages                        # 将本工作流分到 “pages” 分组
-  cancel-in-progress: false           # 如果已有任务在跑，不会取消，保证部署能完成
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
-jobs:                                 # 定义具体的 job（工作任务）
-
-  build:                              # 第一个 job：构建 VitePress 静态站点
-    runs-on: ubuntu-latest            # 运行环境：最新的 Ubuntu
-    steps:                            # 具体步骤
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
-        uses: actions/checkout@v4     # 检出仓库代码
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0              # 拉取完整历史（lastUpdated 插件才需要，否则可以省）
+          fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4    # 安装 pnpm，并添加到环境变量
+        uses: pnpm/action-setup@v4
         with:
-          version: 8.6.12             # 指定 pnpm 版本（避免版本不一致导致问题）
+          version: 8.6.12
 
       - name: Setup Node
-        uses: actions/setup-node@v4   # 安装 Node.js 环境
+        uses: actions/setup-node@v4
         with:
-          node-version: 18            # 使用 Node.js 18 版本
-          cache: pnpm                 # 开启 pnpm 缓存，加快依赖安装
+          node-version: 18
+          cache: pnpm
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5  # 配置 GitHub Pages 的环境变量（必须步骤）
+        uses: actions/configure-pages@v5
 
       - name: Install dependencies
-        run: pnpm install             # 安装项目依赖（根据 package.json）
+        run: |
+          echo "=== 开始安装依赖 ==="
+          pnpm install || (echo "❌ 依赖安装失败" && exit 1)
+          echo "=== 依赖安装完成 ==="
 
       - name: Build with VitePress
-        run: |                        # 运行多行命令
-          pnpm run docs:build         # 执行 VitePress 构建，生成静态文件
-          touch .vitepress/dist/.nojekyll  # 禁用 GitHub Pages 默认的 Jekyll 处理
+        run: |
+          echo "=== 开始执行 VitePress 构建 ==="
+          pnpm run docs:build || (echo "❌ VitePress 构建失败" && exit 1)
+          echo "=== 构建完成，检查 dist 目录 ==="
+          ls -la .vitepress || echo "⚠️ .vitepress 目录不存在"
+          ls -la .vitepress/dist || echo "⚠️ .vitepress/dist 目录不存在"
+          touch .vitepress/dist/.nojekyll || echo "⚠️ .nojekyll 文件创建失败"
+          echo "=== 构建步骤结束 ==="
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3   # 上传构建好的静态文件
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: .vitepress/dist       # 指定上传目录（VitePress 默认输出路径）
+          path: .vitepress/dist
 
-  deploy:                             # 第二个 job：部署到 GitHub Pages
-    environment:                      # 指定部署环境（Actions 会在环境里显示部署结果）
-      name: github-pages              # 环境名称：github-pages
-      url: ${{ steps.deployment.outputs.page_url }} # 部署完成后输出的站点 URL
-    needs: build                      # 依赖 build job（必须先构建再部署）
-    runs-on: ubuntu-latest            # 同样运行在 Ubuntu
-    name: Deploy                      # Job 名称
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment                # 给步骤设置一个 id，方便引用 outputs
-        uses: actions/deploy-pages@v4 # 将构建产物发布到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
