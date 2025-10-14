@@ -41,6 +41,7 @@ export default defineConfig({
         nav: [ // 顶部导航栏配置
             {text: "指引", link: "/guide/introduce/introduce/introduce", activeMatch: "/guide/introduce/"}, // 指引页面
             {text: "文档", link: "/guide/docs/doc", activeMatch: "/guide/docs/"}, // 文档页面
+            {text: "Python", link: "/guide/docs/doc", activeMatch: "/guide/docs/"}, // 文档页面
             {
                 text: "相关链接", // 下拉菜单
                 items: [

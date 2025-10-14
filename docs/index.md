@@ -16,6 +16,9 @@ hero:
     - theme: alt
       text: 在 Gitee 上查看
       link: https://gitee.com/rensongtaogitee
+    - theme: alt
+      text: 分享模块
+      link: /share/index.md
   image:
     src: /home.png
 features:
